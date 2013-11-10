@@ -1,11 +1,10 @@
-from poster.encode import multipart_encode
-from poster.streaminghttp import register_openers
-import urllib2
+import requests
 import sys
 import threading
 import time
 import wx
 import os
+import codecs
 from gui_components.sized import SizedDialog
 from logger import logger
 logging = logger.getChild('transfer_dialogs')
@@ -16,7 +15,7 @@ class TransferDialog(SizedDialog):
 
  def __init__(self, url=None, filename=None, follow_location=True, completed_callback=None, verbose=False, *args, **kwargs):
   self.url = url
-  self.filename = filename
+  self.filename = unicode(filename)
   self.start_time = None
   self.completed_callback = completed_callback
   self.background_thread = None
@@ -59,13 +58,11 @@ class TransferDialog(SizedDialog):
 
  def perform_transfer(self):
   self.start_time = time.time()
-  register_openers()
-  file = {'file': open(self.filename, 'rb')}
+  file = {'file': codecs.open(self.filename, 'rb', 'utf-8')}
   logging.debug("File: %s" % str(file))
-  datagen, headers = multipart_encode(file)
-  request = urllib2.Request(self.url, datagen, headers)
-  self.response['body'] = urllib2.urlopen(request).read()
-  logging.debug("@Response is %s" % str(self.response))
+  r = requests.post(self.url, files = file)
+  logging.debug("@R is %s" % str(r.text))
+  self.response['body'] = r.text
   wx.CallAfter(self.complete_transfer)
 
  def perform_threaded(self):
@@ -103,7 +100,7 @@ class DownloadDialog(TransferDialog):
   super(DownloadDialog, self).__init__(*args, **kwargs)
   self.download_file = open(self.filename, 'wb')
   r = requests.get(url)
-  self.response['body'] = r.content
+  self.response['body'] = r.text
   logging.debug("Response is: %s" % str(self.response))
 
  def complete_transfer(self):
