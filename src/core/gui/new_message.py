@@ -256,6 +256,7 @@ class NewMessageDialog(SquareDialog):
    self.upload_dlg.Show(True)
    try:
     self.upload_dlg.perform_threaded()
+    logging.debug("Response is %s" % str(self.upload_dlg.response))
    except:
     logging.exception("Unable to perform upload")
   except:
@@ -264,6 +265,7 @@ class NewMessageDialog(SquareDialog):
    return output.speak(_("There was an error attaching the file."), True)
 
  def upload_completed(self):
+  logging.debug("Response is %s" % str(self.upload_dlg.response))
   url = json.loads(self.upload_dlg.response['body'])['url']
   logging.debug("Gotten URL: %s" % url)
   self.upload_dlg.Destroy()

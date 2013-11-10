@@ -1,6 +1,7 @@
-import pycurl
+from poster.encode import multipart_encode
+from poster.streaminghttp import register_openers
+import urllib2
 import sys
-import codecs
 import threading
 import time
 import wx
@@ -8,7 +9,6 @@ import os
 from gui_components.sized import SizedDialog
 from logger import logger
 logging = logger.getChild('transfer_dialogs')
-from urllib import urlencode
 
 __all__ = ['TransferDialog', 'DownloadDialog', 'UploadDialog']
 
@@ -17,28 +17,17 @@ class TransferDialog(SizedDialog):
  def __init__(self, url=None, filename=None, follow_location=True, completed_callback=None, verbose=False, *args, **kwargs):
   self.url = url
   self.filename = filename
-  self.curl = pycurl.Curl()
   self.start_time = None
   self.completed_callback = completed_callback
   self.background_thread = None
   self.transfer_rate = 0
-  self.curl.setopt(self.curl.PROGRESSFUNCTION, self.progress_callback)
-  try:
-   self.curl.setopt(self.curl.URL, url)
-  except:
-   logging.exception("URL error: %s" % self.curl.errstr())
-  self.curl.setopt(self.curl.NOPROGRESS, 0)
-  #self.curl.setopt(self.curl.HTTPHEADER, ["content-type: */*; charset=utf-8;"])
-  self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_0)
-  self.curl.setopt(self.curl.FOLLOWLOCATION, int(follow_location))
-  self.curl.setopt(self.curl.VERBOSE, int(verbose))
   super(TransferDialog, self).__init__(*args, **kwargs)
   self.progress_bar = wx.Gauge(parent=self.pane)
-  self.file = self.labeled_control("Filename:", wx.TextCtrl, value=filename, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(200, 100))
-  self.current_amount = self.labeled_control("Currently transfered:", wx.TextCtrl, value='0', style=wx.TE_READONLY|wx.TE_MULTILINE)
-  self.total_size = self.labeled_control("Total file size:", wx.TextCtrl, value='0', style=wx.TE_READONLY|wx.TE_MULTILINE)
-  self.speed = self.labeled_control("Transfer rate:", wx.TextCtrl, style=wx.TE_READONLY|wx.TE_MULTILINE, value="0 Kb/s")
-  self.eta = self.labeled_control("ETA:", wx.TextCtrl, style=wx.TE_READONLY|wx.TE_MULTILINE, value="Unknown", size=(200, 100))
+  self.file = self.labeled_control(_("Filename:"), wx.TextCtrl, value=filename, style=wx.TE_READONLY|wx.TE_MULTILINE, size=(200, 100))
+  self.current_amount = self.labeled_control(_("Currently transfered:"), wx.TextCtrl, value='0', style=wx.TE_READONLY|wx.TE_MULTILINE)
+  self.total_size = self.labeled_control(_("Total file size:"), wx.TextCtrl, value='0', style=wx.TE_READONLY|wx.TE_MULTILINE)
+  self.speed = self.labeled_control(_("Transfer rate:"), wx.TextCtrl, style=wx.TE_READONLY|wx.TE_MULTILINE, value="0 Kb/s")
+  self.eta = self.labeled_control(_("ETA:"), wx.TextCtrl, style=wx.TE_READONLY|wx.TE_MULTILINE, value="Unknown", size=(200, 100))
   self.finish_setup()#create_buttons=False)
 
  def elapsed_time(self):
@@ -67,13 +56,16 @@ class TransferDialog(SizedDialog):
   if ETA:
    wx.CallAfter(self.eta.SetValue, seconds_to_string(ETA))
 
+
  def perform_transfer(self):
   self.start_time = time.time()
-  try:
-   self.curl.perform()
-  except:
-   logging.exception("CURL error: %s" % self.curl.errstr())
-  self.curl.close()
+  register_openers()
+  file = {'file': open(self.filename, 'rb')}
+  logging.debug("File: %s" % str(file))
+  datagen, headers = multipart_encode(file)
+  request = urllib2.Request(self.url, datagen, headers)
+  self.response['body'] = urllib2.urlopen(request).read()
+  logging.debug("@Response is %s" % str(self.response))
   wx.CallAfter(self.complete_transfer)
 
  def perform_threaded(self):
@@ -91,7 +83,6 @@ class TransferDialog(SizedDialog):
 
  def on_cancel(self, evt):
   evt.Skip()
-  self.curl.close()
 
 
 class UploadDialog(TransferDialog):
@@ -99,15 +90,6 @@ class UploadDialog(TransferDialog):
  def __init__(self, field=None, filename=None, *args, **kwargs):
   super(UploadDialog, self).__init__(filename=filename, *args, **kwargs)
   self.response = dict()
-  self.curl.setopt(self.curl.POST, 1)
-  if isinstance(filename, unicode):
-   local_filename = filename.encode(sys.getfilesystemencoding())
-  else:
-   local_filename = filename
-  logging.debug("Local filename is %s" % local_filename)
-  self.curl.setopt(self.curl.HTTPPOST, [(field, (self.curl.FORM_FILE, local_filename, self.curl.FORM_FILENAME, local_filename))])
-  self.curl.setopt(self.curl.HEADERFUNCTION, self.header_callback)
-  self.curl.setopt(self.curl.WRITEFUNCTION, self.body_callback)
 
  def header_callback(self, content):
   self.response['header'] = content
@@ -120,7 +102,9 @@ class DownloadDialog(TransferDialog):
  def __init__(self, follow_location=True, *args, **kwargs):
   super(DownloadDialog, self).__init__(*args, **kwargs)
   self.download_file = open(self.filename, 'wb')
-  self.curl.setopt(self.curl.WRITEFUNCTION, self.download_file.write)
+  r = requests.get(url)
+  self.response['body'] = r.content
+  logging.debug("Response is: %s" % str(self.response))
 
  def complete_transfer(self):
   self.download_file.close()
