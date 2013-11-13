@@ -58,10 +58,8 @@ class TransferDialog(SizedDialog):
 
  def perform_transfer(self):
   self.start_time = time.time()
-  file = {'file': codecs.open(self.filename, 'rb', 'utf-8')}
-  logging.debug("File: %s" % str(file))
-  r = requests.post(self.url, files = file)
-  logging.debug("@R is %s" % str(r.text))
+  with open(self.filename, 'rb') as f:
+   r = requests.post(self.url, data = f)
   self.response['body'] = r.text
   wx.CallAfter(self.complete_transfer)
 
