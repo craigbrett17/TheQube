@@ -2,7 +2,6 @@ from logger import logger
 logging = logger.getChild('core.gui.new_message')
 
 import config
-import json
 import misc
 import url_shortener
 import sessions
@@ -246,7 +245,7 @@ class NewMessageDialog(SquareDialog):
   try:
    dlg.postprocess()
    output.speak(_("Attaching..."), True)
-   baseUrl = 'http://api.twup.me/post.json' if config.main['AudioServices']['service'] == 'twup.me' else 'http://sndup.net/post.php'
+   baseUrl = 'http://api.twup.me/post.json' if config.main['AudioServices']['service'] == 'twup.me' else 'http://beta.sndup.net/post.php'
    if config.main['AudioServices']['service'] == 'sndup.net' and len(config.main['AudioServices']['sndUpAPIKey']) > 0:
     uploadUrl = baseUrl + '?apikey=' + config.main['AudioServices']['sndUpAPIKey']
    else:
@@ -266,8 +265,11 @@ class NewMessageDialog(SquareDialog):
 
  def upload_completed(self):
   logging.debug("Response is %s" % str(self.upload_dlg.response))
-  url = json.loads(self.upload_dlg.response['body'])['url']
-  logging.debug("Gotten URL: %s" % url)
+  try:
+   url = self.upload_dlg.response['url']
+  except Exception, e:
+   logging.exception("Unable to load JSON: %s, response: %s" % (str(e), str(self.upload_dlg.response)))
+  # logging.debug("Gotten URL: %s" % url)
   self.upload_dlg.Destroy()
   self.recording_dlg.cleanup()
   self.recording_dlg.Destroy()
@@ -276,7 +278,7 @@ class NewMessageDialog(SquareDialog):
    output.speak(_("File attached."), True)
    self.message.SetFocus()
   else:
-   error = json.loads(self.upload_dlg.response['body'])['error']
+   error = self.upload_dlg.response['error']
    output.speak(_(error), True)
    self.message.SetFocus()
   

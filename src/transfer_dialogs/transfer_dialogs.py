@@ -58,9 +58,13 @@ class TransferDialog(SizedDialog):
 
  def perform_transfer(self):
   self.start_time = time.time()
-  with open(self.filename, 'rb') as f:
-   r = requests.post(self.url, data = f)
-  self.response['body'] = r.text
+  files = {'file': codecs.open(self.filename, 'rb', 'utf-8')}
+  try:
+   r = requests.post(self.url, files = files)
+  except Exception, e:
+   logging.exception("Failed to post file: %s" % str(e))
+  logging.debug("Requests response is %s" % str(r.content))
+  self.response = r.json()
   wx.CallAfter(self.complete_transfer)
 
  def perform_threaded(self):
@@ -98,7 +102,7 @@ class DownloadDialog(TransferDialog):
   super(DownloadDialog, self).__init__(*args, **kwargs)
   self.download_file = open(self.filename, 'wb')
   r = requests.get(url)
-  self.response['body'] = r.text
+  self.response = r.json()
   logging.debug("Response is: %s" % str(self.response))
 
  def complete_transfer(self):

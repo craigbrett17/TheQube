@@ -13,7 +13,7 @@ msgstr ""
 "X-Poedit-Basepath: d:\\gitrepos\\the_qube\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 1.5.5\n"
+"X-Generator: Poedit 1.6beta2\n"
 "X-Poedit-SearchPath-0: src\n"
 
 #: ../src\core\gui\SessionManager\main.py:16
@@ -1071,19 +1071,16 @@ msgid "Attempting import of buffer %s"
 msgstr "Попытка импорта буфера %s"
 
 #: ../src\gmaps\api.py:18
-#, fuzzy
 msgid "address"
-msgstr "Адрес электронной почты"
+msgstr "Адрес"
 
 #: ../src\gmaps\api.py:18
-#, fuzzy
 msgid "country"
-msgstr "Статья"
+msgstr "Страна"
 
 #: ../src\gmaps\api.py:18
-#, fuzzy
 msgid "intersection"
-msgstr "Описание списка:"
+msgstr "Перекрёсток"
 
 #: ../src\gmaps\api.py:18
 msgid "planet"
