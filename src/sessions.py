@@ -185,7 +185,8 @@ def rename_session(session, name):
 def possible_sessions ():
  #Replace when autodiscovery worked out.
  return ['Twitter',
-  'Stopwatch'
+  'Stopwatch',
+  'Facebook'
 ]
 
 class RenameError(Exception): pass

@@ -1,0 +1,44 @@
+isVisible=boolean(default=True)
+templateSystemVersion=integer(default=1)
+isConfigured=boolean(default=False)
+
+[oauth]
+fbData=string(default = "")
+userData=string(default = "")
+
+[keymap]
+NewPost = string(default = "control+win+n")
+
+[speechmap]
+NewPost=string(default='post')
+
+[counts]
+resultsCount=integer(default = 100) #How many search results to return at once?
+retrieveCount=integer(default=200) #How many tweets to retrieve at once?
+
+[updates]
+checkInterval=integer(default=180)
+friendsInterval=integer(default=1200) #Default update interval for auto-updating friends and followers buffers.
+maxAPIPerUpdate=integer(default=1)
+
+[UI]
+confirmRemovePost=boolean(default=True)
+
+[templates]
+default_template=string(default='$if(audio){*audio* }$if(geo){*geo* } $when, $name: $message, $from')
+comment=string(default="$name: $message")
+
+[sounds]
+defaultSound=string(default="result_received.wav")
+soundPack=string(default="Standard")
+maxLength=string(default="max_length.wav")
+boundary=string(default="boundary.wav")
+tweetReceived=string(default="tweet_received.wav")
+tweetSent=string(default="tweet_sent.wav")
+replyReceived=string(default="reply_received.wav")
+replySent=string(default="reply_sent.wav")
+dmReceived=string(default="dm_received.wav")
+dmSent=string(default="dm_sent.wav")
+resultReceived=string(default="result_received.wav")
+newBuffer=string(default="new_buffer.wav")
+dismissBuffer=string(default="dismiss_buffer.wav")

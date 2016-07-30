@@ -11,3 +11,4 @@ pycurl
 pydispatcher
 requests
 twython
+facebook-sdk

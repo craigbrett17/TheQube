@@ -1,0 +1,1 @@
+from news_feed import news_feed
